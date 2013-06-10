@@ -7,6 +7,7 @@ for use in Python projects or via the Python shell.
 import base64
 import simplejson as json
 import requests
+from .exceptions import RequestException, MissingStoreAddress, MissingCredentials
 
 API_PROTOCOL = 'https'
 API_HOST = ''
@@ -20,11 +21,11 @@ class Connection(object):
     user = API_USER
     api_key = API_KEY
     protocol = API_PROTOCOL
-    
-    if not self.host:
-        raise MissingStoreAddress("No store address was provided")
             
     def request_json(self, method, path, data=None):
+        if not self.host:
+            raise MissingStoreAddress("No store address was provided")
+            
         response = self.request(method, path, data)
         if response.status_code == 200 or response.status_code == 201:
             return response.json()
@@ -64,7 +65,7 @@ class Resource(object):
     client = Connection()
 
     def __init__(self, fields=None):
-        pass
+        self.__dict__ = fields or dict()
 
     def __iter__(self):
         return self
@@ -82,28 +83,37 @@ class Resource(object):
     def get(self, filters=None):
         """Fetch all resources"""
         resource_list = self.client.request_json('GET', self.ext + self.filtering(filters))
-        return resource_list
+        return [self.__class__(resource) for resource in resource_list]
    
     def get_by_id(self, ID):
         """Fetch resource by id"""
         resource = self.client.request_json('GET', self.ext + '/' + str(ID))
         self.selected = ID
-        return resource
+        return self.__class__(resource)
     
     def create(self, payload):
         """Create new resource"""
-        return self.client.request_json('POST', self.ext, payload)
+        resource = self.client.request_json('POST', self.ext, payload)
+        return self.__class__(resource)
     
-    def update(self, payload, ID=None):
+    def update(self, payload=None, ID=None):
         """Updates local changes to the resource"""
         ID = ID or self.selected
-        return self.client.request_json('PUT', self.ext + '/' + str(ID), payload)
-            
+        if not payload:
+            payload = self.__dict__
+            resource = self.client.request_json('PUT', self.ext + '/' + str(ID), payload)
+        else:
+            resource = self.client.request_json('PUT', self.ext + '/' + str(ID), payload)
+        return self.__class__(resource)    
+        
     def delete(self, ID):
         """Deletes the resource"""
         ID = ID or self.selected
         return self.client.request_json('DELETE', self.ext + '/' + str(ID))
-              
+        
+    def get_json(self):
+        return self.__dict__
+           
 class Time(Resource):
     """Time of server"""
 
@@ -111,8 +121,7 @@ class Time(Resource):
 
 class Coupons(Resource):
     """JSON Coupons"""
-    
-    
+   
     ext = "/coupons"
 
         
@@ -150,16 +159,3 @@ class Categories(Resource):
     """Categories collection"""
 
     ext = '/categories'
-
-
-class RequestException(RuntimeError):
-    """There was an ambiguous exception that occurred while handling your
-    request."""
-    
-    
-class MissingStoreAddress(RequestException, ValueError):
-    """The URL for a store must be provided"""
-   
-    
-class MissingCredentials(RequestException, ValueError):
-    """Authentication must be provided"""
