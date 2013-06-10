@@ -116,46 +116,67 @@ class Resource(object):
            
 class Time(Resource):
     """Time of server"""
-
     ext = '/time'
-
+    def get(self):
+        return self.client.request_json('GET', self.ext)
+        
 class Coupons(Resource):
-    """JSON Coupons"""
-   
+    """Coupons Resource""" 
     ext = "/coupons"
 
         
 class Products(Resource):
-    """The collection of products in a store"""
-   
+    """Products Resource"""  
     ext = '/products'
 
 
 class Brands(Resource):
-    """Brands collection"""
-
+    """Brands Resource"""
     ext = '/brands'
 
 
 class Customers(Resource):
-    """Customers collection"""
-
+    """Customers Resource"""
     ext = '/customers'
 
 
 class Orders(Resource):
-    """Orders collection"""
+    """Orders Resource"""
 
     ext = '/orders'
     
 
 class OptionSets(Resource):
-    """Option sets collection"""
-
+    """Option Sets Resource"""
     ext = '/optionsets'
 
 
 class Categories(Resource):
-    """Categories collection"""
-
+    """Categories Resource"""
     ext = '/categories'
+
+    
+class CustomerGroups(Resource):
+    """Customer Groups Resource"""
+    ext = '/customer_groups'
+    
+    
+class OrderStatus(Resource):
+    """Order Status Resource"""
+    ext = '/orderstatuses'
+    def get(self):
+        return self.client.request_json('GET', self.ext)
+
+class Store(Resource):
+    """Store Resource"""
+    ext = '/store'
+    def get(self):
+        return self.client.request_json('GET', self.ext)
+    
+
+class Countries(Resource):
+    """Countries Resource"""
+    ext = '/countries'
+    def get(self):
+        return self.client.request_json('GET', self.ext)
+    
