@@ -78,12 +78,15 @@ class Resource(object):
                 params += filter_string
             return params
         else:
-            return params
+            return ''
                 
-    def get(self, filters=None):
+    def get(self, filters=None, json=False):
         """Fetch all resources"""
         resource_list = self.client.request_json('GET', self.ext + self.filtering(filters))
-        return [self.__class__(resource) for resource in resource_list]
+        if not json:
+            return [self.__class__(resource) for resource in resource_list]
+        else:
+            return resource_list
    
     def get_by_id(self, ID):
         """Fetch resource by id"""
